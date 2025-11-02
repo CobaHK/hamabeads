@@ -40,14 +40,14 @@ const Pegboard: React.FC<PegboardProps> = ({
   const lastTouchCenter = useRef<{ x: number; y: number } | null>(null);
 
 
-  const getCellFromEvent = useCallback((e: React.MouseEvent<HTMLDivElement>): [number, number] | null => {
+  const getCellFromCoords = useCallback((clientX: number, clientY: number): [number, number] | null => {
     if (!containerRef.current) return null;
     const containerRect = containerRef.current.getBoundingClientRect();
     const gridUntransformedWidth = gridWidth * 16;
     const gridUntransformedHeight = gridHeight * 16;
 
-    const mouseXFromCenter = e.clientX - containerRect.left - containerRect.width / 2;
-    const mouseYFromCenter = e.clientY - containerRect.top - containerRect.height / 2;
+    const mouseXFromCenter = clientX - containerRect.left - containerRect.width / 2;
+    const mouseYFromCenter = clientY - containerRect.top - containerRect.height / 2;
 
     const mouseXOnGrid = (mouseXFromCenter - pan.x) / zoom;
     const mouseYOnGrid = (mouseYFromCenter - pan.y) / zoom;
@@ -63,6 +63,10 @@ const Pegboard: React.FC<PegboardProps> = ({
     }
     return null;
   }, [gridWidth, gridHeight, pan.x, pan.y, zoom]);
+
+  const getCellFromEvent = useCallback((e: React.MouseEvent<HTMLDivElement>): [number, number] | null => {
+    return getCellFromCoords(e.clientX, e.clientY);
+  }, [getCellFromCoords]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -181,7 +185,7 @@ const Pegboard: React.FC<PegboardProps> = ({
     } else if (e.touches.length === 1) {
       // Single finger draw/pan
       const touch = e.touches[0];
-      const coords = getCellFromEvent({ clientX: touch.clientX, clientY: touch.clientY } as any);
+      const coords = getCellFromCoords(touch.clientX, touch.clientY);
       if (coords && (currentTool === Tool.Pencil || currentTool === Tool.Eraser)) {
         setIsMouseDown(true);
         const color = currentTool === Tool.Eraser ? null : currentColor;
@@ -224,7 +228,7 @@ const Pegboard: React.FC<PegboardProps> = ({
     } else if (e.touches.length === 1 && isMouseDown) {
       // Continue drawing
       const touch = e.touches[0];
-      const coords = getCellFromEvent({ clientX: touch.clientX, clientY: touch.clientY } as any);
+      const coords = getCellFromCoords(touch.clientX, touch.clientY);
       if (coords && (currentTool === Tool.Pencil || currentTool === Tool.Eraser)) {
         const color = currentTool === Tool.Eraser ? null : currentColor;
         onCellAction(coords[0], coords[1], color, Tool.Pencil);
