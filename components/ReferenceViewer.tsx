@@ -82,10 +82,11 @@ const ReferenceViewer: React.FC<Props> = ({ imageTrace, onUpdateImageTrace, styl
             className={`${isMinimized ? 'md:w-[360px] md:max-h-[70vh]' : ''}`}
             style={{
                 position: 'absolute',
-                top: isMinimized ? 'auto' : 80,
+                top: isMinimized ? 'auto' : '50%',
                 bottom: isMinimized ? 20 : 'auto',
-                left: isMinimized ? 20 : 40,
-                width: isMinimized ? 80 : 360,
+                left: isMinimized ? 20 : '50%',
+                transform: isMinimized ? 'none' : 'translate(-50%, -50%)',
+                width: isMinimized ? 80 : 'min(90vw, 400px)',
                 height: isMinimized ? 80 : 'auto',
                 maxHeight: isMinimized ? 80 : '70vh',
                 overflow: 'hidden',
