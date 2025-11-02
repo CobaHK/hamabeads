@@ -11,6 +11,8 @@ const ReferenceViewer: React.FC<Props> = ({ imageTrace, onUpdateImageTrace, styl
     const containerRef = useRef<HTMLDivElement | null>(null);
     const pointerRef = useRef<{ id: number; startX: number; startY: number; origX: number; origY: number } | null>(null);
     const [isMinimized, setIsMinimized] = React.useState(false);
+    const lastTouchDistance = useRef<number | null>(null);
+    const lastTouchCenter = useRef<{ x: number; y: number } | null>(null);
 
     useEffect(() => {
         const el = containerRef.current;
@@ -75,10 +77,76 @@ const ReferenceViewer: React.FC<Props> = ({ imageTrace, onUpdateImageTrace, styl
         onUpdateImageTrace({ scale: 1, x: 0, y: 0 });
     };
 
+    // Touch handlers for mobile pinch zoom
+    const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (isMinimized) return;
+
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+            lastTouchDistance.current = distance;
+            lastTouchCenter.current = {
+                x: (touch1.clientX + touch2.clientX) / 2,
+                y: (touch1.clientY + touch2.clientY) / 2,
+            };
+        }
+    };
+
+    const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (isMinimized) return;
+
+        if (e.touches.length === 2 && lastTouchDistance.current && containerRef.current) {
+            e.preventDefault();
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+            const center = {
+                x: (touch1.clientX + touch2.clientX) / 2,
+                y: (touch1.clientY + touch2.clientY) / 2,
+            };
+
+            const rect = containerRef.current.getBoundingClientRect();
+
+            // Calculate zoom
+            const scale = distance / lastTouchDistance.current;
+            const currentScale = imageTrace.scale || 1;
+            const newScale = Math.min(Math.max(0.1, currentScale * scale), 10);
+
+            // Calculate focal point for zoom
+            const centerXInContainer = center.x - rect.left;
+            const centerYInContainer = center.y - rect.top;
+
+            const imgX = (centerXInContainer - rect.width / 2 - (imageTrace.x || 0)) / currentScale;
+            const imgY = (centerYInContainer - rect.height / 2 - (imageTrace.y || 0)) / currentScale;
+
+            const newX = centerXInContainer - rect.width / 2 - imgX * newScale;
+            const newY = centerYInContainer - rect.height / 2 - imgY * newScale;
+
+            onUpdateImageTrace({
+                scale: newScale,
+                x: Math.round(newX),
+                y: Math.round(newY)
+            });
+
+            lastTouchDistance.current = distance;
+            lastTouchCenter.current = center;
+        }
+    };
+
+    const handleTouchEnd = () => {
+        lastTouchDistance.current = null;
+        lastTouchCenter.current = null;
+    };
+
     return (
         <div
             ref={containerRef}
             onDoubleClick={handleDoubleClick}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             className={`${isMinimized ? 'md:w-[360px] md:max-h-[70vh]' : ''}`}
             style={{
                 position: 'absolute',
