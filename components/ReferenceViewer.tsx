@@ -211,6 +211,7 @@ const ReferenceViewer: React.FC<Props> = ({ imageTrace, onUpdateImageTrace, styl
                 alignItems: 'center',
                 justifyContent: 'center',
                 opacity: isMinimized ? 0.7 : 1,
+                overflow: 'hidden',
             }}>
                 <img
                     src={imageTrace.src || undefined}
@@ -220,8 +221,11 @@ const ReferenceViewer: React.FC<Props> = ({ imageTrace, onUpdateImageTrace, styl
                         transformOrigin: 'center center',
                         opacity: imageTrace.opacity ?? 1,
                         imageRendering: 'pixelated',
-                        maxWidth: '100%',
-                        maxHeight: '100%',
+                        maxWidth: isMinimized ? 'none' : '100%',
+                        maxHeight: isMinimized ? 'none' : '100%',
+                        width: isMinimized ? '100%' : 'auto',
+                        height: isMinimized ? '100%' : 'auto',
+                        objectFit: isMinimized ? 'cover' : 'contain',
                         userSelect: 'none',
                         pointerEvents: 'none', // interactions handled on container
                     }}
