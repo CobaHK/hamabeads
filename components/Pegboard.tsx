@@ -41,28 +41,25 @@ const Pegboard: React.FC<PegboardProps> = ({
 
 
   const getCellFromCoords = useCallback((clientX: number, clientY: number): [number, number] | null => {
-    if (!containerRef.current) return null;
+    if (!gridRef.current || !containerRef.current) return null;
+
     const containerRect = containerRef.current.getBoundingClientRect();
-    const gridUntransformedWidth = gridWidth * 16;
-    const gridUntransformedHeight = gridHeight * 16;
+    const gridRect = gridRef.current.getBoundingClientRect();
 
-    const mouseXFromCenter = clientX - containerRect.left - containerRect.width / 2;
-    const mouseYFromCenter = clientY - containerRect.top - containerRect.height / 2;
+    // Calculate position relative to the transformed grid
+    const relativeX = clientX - gridRect.left;
+    const relativeY = clientY - gridRect.top;
 
-    const mouseXOnGrid = (mouseXFromCenter - pan.x) / zoom;
-    const mouseYOnGrid = (mouseYFromCenter - pan.y) / zoom;
-
-    const mouseXFromTopLeft = mouseXOnGrid + gridUntransformedWidth / 2;
-    const mouseYFromTopLeft = mouseYOnGrid + gridUntransformedHeight / 2;
-
-    const x = Math.floor(mouseXFromTopLeft / 16);
-    const y = Math.floor(mouseYFromTopLeft / 16);
+    // Convert to grid coordinates (each cell is 16px, but account for zoom)
+    const cellSize = 16 * zoom;
+    const x = Math.floor(relativeX / cellSize);
+    const y = Math.floor(relativeY / cellSize);
 
     if (x >= 0 && x < gridWidth && y >= 0 && y < gridHeight) {
       return [x, y];
     }
     return null;
-  }, [gridWidth, gridHeight, pan.x, pan.y, zoom]);
+  }, [gridWidth, gridHeight, zoom]);
 
   const getCellFromEvent = useCallback((e: React.MouseEvent<HTMLDivElement>): [number, number] | null => {
     return getCellFromCoords(e.clientX, e.clientY);
