@@ -1,0 +1,5 @@
+{
+  "name": "Designer de Hama Beads",
+  "description": "Uma aplicação web para criar designs de pixel art para Hama/Perler beads. Esta ferramenta ajuda você a planejar seus projetos, fornecendo paletas de cores específicas do fabricante, uma base digital com camadas e uma contagem exata de contas necessárias para sua criação.",
+  "requestFramePermissions": []
+}
